@@ -301,3 +301,406 @@ This table compares Ysnrfd's design choices against other prominent architecture
 ## 9. Conclusion
 
 Ysnrfd represents a sophisticated, modern, and highly practical approach to language modeling. By synthesizing a suite of proven architectural innovations with a focus on computational efficiency, training stability, and developer experience, it provides a powerful and robust platform for both research and production applications. This document has aimed to provide a complete and authoritative resource for understanding and leveraging the full potential of the Ysnrfd architecture.
+
+
+---
+
+# Flow
+
+```mermaid
+---
+config:
+  layout: dagre
+---
+flowchart TB
+ subgraph subGraph0["YsnrfdForCausalLM Causal Language Model"]
+        YFCLMInputs["Input processing"]
+        YFCLMForward["forward method"]
+        YFCLMCallModel["Call base model"]
+        YFCLMGetHiddenStates["Get hidden states"]
+        YFCLMApplyLMHead["Apply LM head"]
+        YFCLMLogits["Output logits"]
+        YFCLMLossCalculation["Loss calculation"]
+        YFCLMShiftLogits["Shift logits"]
+        YFCLMShiftLabels["Shift labels"]
+        YFCLMReshapeLogits["Reshape logits"]
+        YFCLMReshapeLabels["Reshape labels"]
+        YFCLMCrossEntropy["Cross entropy loss"]
+        YFCLMLossOutput["Loss output"]
+        YFCLMCheckPast["Check past key values"]
+        YFCLMPrepareGeneration["Prepare generation inputs"]
+        YFCLMIncrementalDecoding["Incremental decoding"]
+        YFCLMFirstPass["First pass"]
+        YFCLMKeepLastToken["Keep last token"]
+        YFCLMCalculatePastLength["Calculate past length"]
+        YFCLMCreatePositionIDs["Create position IDs"]
+        YFCLMUpdateAttentionMask["Update attention mask"]
+        YFCLMUseFullSequence["Use full sequence"]
+        YFCLMCreateSequentialPositions["Create sequential positions"]
+        YFCLMModelInputs["Model inputs"]
+        YFCLMOutputDict["Output dictionary"]
+  end
+ subgraph subGraph1["YsnrfdModel Transformer Decoder"]
+        YMInputValidation["Input validation"]
+        YMForward["forward method"]
+        YMExtractShape["Extract shape"]
+        YMGetDevice["Get device"]
+        YMCalculatePastLength["Calculate past length"]
+        YMPositionIDsLogic["Position IDs logic"]
+        YMCheckPositionIDs["Check position IDs"]
+        YMCreatePositionIDs["Create position IDs"]
+        YMUseProvidedPositionIDs["Use provided position IDs"]
+        YMExpandPositionIDs["Expand position IDs"]
+        YMEmbeddingLookup["Embedding lookup"]
+        YMHiddenStates["Hidden states"]
+        YMAttentionMaskPreparation["Attention mask preparation"]
+        YMCallPrepareDecoderMask["Call prepare decoder mask"]
+        YMMakeCausalMask["Make causal mask"]
+        YMCreateCausalMatrix["Create causal matrix"]
+        YMCreateTriangularCondition["Create triangular condition"]
+        YMFillLowerTriangle["Fill lower triangle"]
+        YMHandlePastContext["Handle past context"]
+        YMConcatZeros["Concatenate zeros"]
+        YMExpandDims["Expand dimensions"]
+        YMCheckAttentionMask["Check attention mask"]
+        YMExpandPaddingMask["Expand padding mask"]
+        YMUseCausalOnly["Use causal only"]
+        YMConvertTo4D["Convert to 4D"]
+        YMInvertMask["Invert mask"]
+        YMCombineMasks["Combine masks"]
+        YMFinalAttentionMask["Final attention mask"]
+        YMDecoderLayersProcessing["Decoder layers processing"]
+        YMInitializeOutputs["Initialize outputs"]
+        YMLayerLoop["Layer loop"]
+        YMStoreHiddenStates["Store hidden states"]
+        YMAppendHiddenStates["Append hidden states"]
+        YMContinue["Continue"]
+        YMGetLayerPast["Get layer past"]
+        YMCheckGradientCheckpointing["Check gradient checkpointing"]
+        YMCheckpointForward["Checkpoint forward"]
+        YMNormalForward["Normal forward"]
+        YMLayerOutputs["Layer outputs"]
+        YMUpdateHiddenStates["Update hidden states"]
+        YMStoreCache["Store cache"]
+        YMAppendToNextCache["Append to next cache"]
+        YMSkipCache["Skip cache"]
+        YMStoreAttentions["Store attentions"]
+        YMAppendToAllSelfAttns["Append to all self attns"]
+        YMSkipAttentions["Skip attentions"]
+        YMEndLoop["End loop"]
+        YMApplyFinalNorm["Apply final norm"]
+        YMFinalHiddenStates["Final hidden states"]
+        YMStoreFinalHiddenStates["Store final hidden states"]
+        YMAppendFinalHiddenStates["Append final hidden states"]
+        YMPrepareOutput["Prepare output"]
+        YMCheckReturnDict["Check return dict"]
+        YMReturnBaseModelOutput["Return base model output"]
+        YMReturnTuple["Return tuple"]
+        YMOutput["Model output"]
+        YMOutputTuple["Output tuple"]
+  end
+ subgraph subGraph2["YsnrfdDecoderLayer Single Transformer Block"]
+        YDLInputs["Inputs"]
+        YDLForward["forward method"]
+        YDLSelfAttentionPath["Self attention path"]
+        YDLStoreResidual1["Store residual"]
+        YDLApplyPreNorm1["Apply pre norm"]
+        YDLCallAttention["Call attention"]
+        YDLGetAttentionOutput["Get attention output"]
+        YDLApplyDropout1["Apply dropout"]
+        YDLAddResidual1["Add residual"]
+        YDLFeedForwardPath["Feed forward path"]
+        YDLStoreResidual2["Store residual"]
+        YDLApplyPreNorm2["Apply pre norm"]
+        YDLCallMLP["Call MLP"]
+        YDLGetMLPOutput["Get MLP output"]
+        YDLApplyDropout2["Apply dropout"]
+        YDLAddResidual2["Add residual"]
+        YDLOutput["Layer output"]
+  end
+ subgraph subGraph3["YsnrfdAttention Multi Head Self Attention"]
+        YAInputs["Inputs"]
+        YAForward["forward method"]
+        YAExtractShape["Extract shape"]
+        YAProjectQKV["Project QKV"]
+        YAQProj["Q projection"]
+        YAKProj["K projection"]
+        YAVProj["V projection"]
+        YAReshapeQ["Reshape Q"]
+        YAReshapeK["Reshape K"]
+        YAReshapeV["Reshape V"]
+        YAHandleRoPE["Handle RoPE"]
+        YAGetRoPECache["Get RoPE cache"]
+        YACheckDevice["Check device"]
+        YASliceRoPE["Slice RoPE"]
+        YAApplyRoPE["Apply RoPE"]
+        YARotatedQ["Rotated Q"]
+        YARotatedK["Rotated K"]
+        YAHandlePastKeyValue["Handle past key value"]
+        YACheckPast["Check past"]
+        YAConcatWithPast["Concat with past"]
+        YAUseCurrent["Use current"]
+        YAUpdatedKeyStates["Updated key states"]
+        YAUpdatedValueStates["Updated value states"]
+        YAUpdateCache["Update cache"]
+        YACreatePresent["Create present"]
+        YANoCache["No cache"]
+        YAAttentionComputation["Attention computation"]
+        YACheckFlashAttention2["Check flash attention"]
+        YAFlashAttention2Path["Flash attention path"]
+        YACheckSDPA["Check SDPA"]
+        YASDPAPath["SDPA path"]
+        YAStandardAttentionPath["Standard attention path"]
+        YADetermineCausal["Determine causal"]
+        YACheckPastForCausal["Check past for causal"]
+        YASDPACausal["SDPA causal"]
+        YASDPANonCausal["SDPA non causal"]
+        YACallSDPA["Call SDPA"]
+        YASDPAOutput["SDPA output"]
+        YAComputeScores["Compute scores"]
+        YAApplyAttentionMask["Apply attention mask"]
+        YAAddMask["Add mask"]
+        YAApplyCausalMask["Apply causal mask"]
+        YAApplyCausal["Apply causal"]
+        YAProceedToSoftmax["Proceed to softmax"]
+        YASoftmax["Softmax"]
+        YAApplyDropout["Apply dropout"]
+        YADropout["Dropout"]
+        YAMatmulWithV["Matmul with V"]
+        YAStandardOutput["Standard output"]
+        YAFlashOutput["Flash output"]
+        YAReshapeAttentionOutput["Reshape attention output"]
+        YATransposeOutput["Transpose output"]
+        YAViewOutput["View output"]
+        YAOutputProjection["Output projection"]
+        YAFinalOutput["Final output"]
+  end
+ subgraph subGraph4["YsnrfdFeedForward SwiGLU Feed Forward"]
+        YFFInput["Input"]
+        YFFForward["forward method"]
+        YFFComputeGate["Compute gate"]
+        YFFApplyActivation["Apply activation"]
+        YFFComputeInput["Compute input"]
+        YFFElementWiseMultiply["Element wise multiply"]
+        YFFComputeOutput["Compute output"]
+        YFFOutput["Output"]
+  end
+ subgraph subGraph5["RMSNorm Root Mean Square Normalization"]
+        RNInput["Input"]
+        RNForward["forward method"]
+        RNStoreDtype["Store dtype"]
+        RNConvertToFloat32["Convert to float32"]
+        RNComputeVariance["Compute variance"]
+        RNComputeRMS["Compute RMS"]
+        RNNormalize["Normalize"]
+        RNApplyWeight["Apply weight"]
+        RNConvertToOriginalDtype["Convert to original dtype"]
+        RNOutput["Output"]
+  end
+ subgraph subGraph6["Rotary Position Embedding RoPE"]
+        ROPEComputeTheta["Compute theta"]
+        ROPEInit["Init method"]
+        ROPECreatePositions["Create positions"]
+        ROPEComputeFreqs["Compute freqs"]
+        ROPEComputeEmb["Compute emb"]
+        ROPEComputeCos["Compute cos"]
+        ROPEComputeSin["Compute sin"]
+        ROPERegisterBuffers["Register buffers"]
+        ROPEInputs["Inputs"]
+        ROPEApply["Apply function"]
+        ROPECheckDims["Check dims"]
+        ROPEUnsqueeze["Unsqueeze"]
+        ROPEUseAsIs["Use as is"]
+        ROPEApplyToQ["Apply to Q"]
+        ROPEApplyToK["Apply to K"]
+        ROPEOutput["Output"]
+        ROPESplit["Split"]
+        ROPERotateHalf["Rotate half function"]
+        ROPERotate["Rotate"]
+        ROPERotatedOutput["Rotated output"]
+  end
+    YsnrfdForCausalLM["YsnrfdForCausalLM"] --> YsnrfdModel["YsnrfdModel"] & LMHead["LM Head Linear Projection"] & GenerationMixin["GenerationMixin"] & YFCLMForward
+    YsnrfdModel --> EmbeddingLayer["Embedding Layer"] & DecoderLayers["Decoder Layers ModuleList"] & FinalNorm["Final RMSNorm"] & GradientCheckpointing["GradientCheckpointing"] & YMForward
+    Config["Config"] --> YsnrfdForCausalLM & YsnrfdModel
+    YFCLMForward --> YFCLMInputs
+    YFCLMInputs --> YFCLMCallModel
+    YFCLMCallModel --> YFCLMGetHiddenStates & YMForward
+    YFCLMGetHiddenStates --> YFCLMApplyLMHead
+    YFCLMApplyLMHead --> YFCLMLogits
+    YFCLMLogits --> YFCLMLossCalculation
+    YFCLMLossCalculation --> YFCLMShiftLogits & YFCLMShiftLabels
+    YFCLMShiftLogits --> YFCLMReshapeLogits
+    YFCLMShiftLabels --> YFCLMReshapeLabels
+    YFCLMReshapeLogits --> YFCLMCrossEntropy
+    YFCLMReshapeLabels --> YFCLMCrossEntropy
+    YFCLMCrossEntropy --> YFCLMLossOutput
+    YFCLMPrepareGeneration --> YFCLMCheckPast
+    YFCLMCheckPast --> YFCLMIncrementalDecoding & YFCLMFirstPass
+    YFCLMIncrementalDecoding --> YFCLMKeepLastToken & YFCLMCalculatePastLength
+    YFCLMCalculatePastLength --> YFCLMCreatePositionIDs
+    YFCLMKeepLastToken --> YFCLMUpdateAttentionMask
+    YFCLMFirstPass --> YFCLMUseFullSequence & YFCLMCreateSequentialPositions
+    YFCLMCreatePositionIDs --> YFCLMModelInputs
+    YFCLMCreateSequentialPositions --> YFCLMModelInputs
+    YFCLMUpdateAttentionMask --> YFCLMModelInputs
+    YFCLMUseFullSequence --> YFCLMModelInputs
+    YFCLMModelInputs --> YFCLMOutputDict
+    YMForward --> YMInputValidation
+    YMInputValidation --> YMExtractShape
+    YMExtractShape --> YMGetDevice
+    YMGetDevice --> YMCalculatePastLength
+    YMCalculatePastLength --> YMPositionIDsLogic
+    YMPositionIDsLogic --> YMCheckPositionIDs
+    YMCheckPositionIDs --> YMCreatePositionIDs & YMUseProvidedPositionIDs
+    YMCreatePositionIDs --> YMExpandPositionIDs
+    YMExpandPositionIDs --> YMEmbeddingLookup
+    YMUseProvidedPositionIDs --> YMEmbeddingLookup
+    YMEmbeddingLookup --> YMHiddenStates
+    YMHiddenStates --> YMAttentionMaskPreparation
+    YMAttentionMaskPreparation --> YMCallPrepareDecoderMask
+    YMCallPrepareDecoderMask --> YMMakeCausalMask & YMCheckAttentionMask
+    YMMakeCausalMask --> YMCreateCausalMatrix
+    YMCreateCausalMatrix --> YMCreateTriangularCondition
+    YMCreateTriangularCondition --> YMFillLowerTriangle
+    YMFillLowerTriangle --> YMHandlePastContext
+    YMHandlePastContext --> YMConcatZeros & YMExpandDims
+    YMConcatZeros --> YMExpandDims
+    YMCheckAttentionMask --> YMExpandPaddingMask & YMUseCausalOnly
+    YMExpandPaddingMask --> YMConvertTo4D & YMInvertMask
+    YMInvertMask --> YMCombineMasks
+    YMCombineMasks --> YMFinalAttentionMask
+    YMUseCausalOnly --> YMFinalAttentionMask
+    YMFinalAttentionMask --> YMDecoderLayersProcessing
+    YMDecoderLayersProcessing --> YMInitializeOutputs & YDLForward
+    YMInitializeOutputs --> YMLayerLoop
+    YMLayerLoop --> YMStoreHiddenStates & YMEndLoop
+    YMStoreHiddenStates --> YMAppendHiddenStates & YMContinue
+    YMContinue --> YMGetLayerPast
+    YMGetLayerPast --> YMCheckGradientCheckpointing
+    YMCheckGradientCheckpointing --> YMCheckpointForward & YMNormalForward
+    YMCheckpointForward --> YMLayerOutputs
+    YMNormalForward --> YMLayerOutputs
+    YMLayerOutputs --> YMUpdateHiddenStates
+    YMUpdateHiddenStates --> YMStoreCache
+    YMStoreCache --> YMAppendToNextCache & YMSkipCache & YMStoreAttentions
+    YMStoreAttentions --> YMAppendToAllSelfAttns & YMSkipAttentions
+    YMEndLoop --> YMApplyFinalNorm
+    YMApplyFinalNorm --> YMFinalHiddenStates
+    YMFinalHiddenStates --> YMStoreFinalHiddenStates
+    YMStoreFinalHiddenStates --> YMAppendFinalHiddenStates & YMPrepareOutput
+    YMPrepareOutput --> YMCheckReturnDict
+    YMCheckReturnDict --> YMReturnBaseModelOutput & YMReturnTuple
+    YMReturnBaseModelOutput --> YMOutput
+    YMReturnTuple --> YMOutputTuple
+    YDLForward --> YDLInputs
+    YDLInputs --> YDLSelfAttentionPath
+    YDLSelfAttentionPath --> YDLStoreResidual1
+    YDLStoreResidual1 --> YDLApplyPreNorm1
+    YDLApplyPreNorm1 --> YDLCallAttention & RNForward
+    YDLCallAttention --> YDLGetAttentionOutput & YAForward
+    YDLGetAttentionOutput --> YDLApplyDropout1
+    YDLApplyDropout1 --> YDLAddResidual1
+    YDLAddResidual1 --> YDLFeedForwardPath
+    YDLFeedForwardPath --> YDLStoreResidual2
+    YDLStoreResidual2 --> YDLApplyPreNorm2
+    YDLApplyPreNorm2 --> YDLCallMLP & RNForward
+    YDLCallMLP --> YDLGetMLPOutput & YFFForward
+    YDLGetMLPOutput --> YDLApplyDropout2
+    YDLApplyDropout2 --> YDLAddResidual2
+    YDLAddResidual2 --> YDLOutput
+    YAForward --> YAInputs
+    YAInputs --> YAExtractShape
+    YAExtractShape --> YAProjectQKV
+    YAProjectQKV --> YAQProj & YAKProj & YAVProj
+    YAQProj --> YAReshapeQ
+    YAKProj --> YAReshapeK
+    YAVProj --> YAReshapeV
+    YAReshapeQ --> YAHandleRoPE
+    YAReshapeK --> YAHandleRoPE
+    YAHandleRoPE --> YAGetRoPECache & ROPEApply
+    YAGetRoPECache --> YACheckDevice
+    YACheckDevice --> YASliceRoPE
+    YASliceRoPE --> YAApplyRoPE
+    YAApplyRoPE --> YARotatedQ & YARotatedK
+    YARotatedQ --> YAHandlePastKeyValue
+    YARotatedK --> YAHandlePastKeyValue
+    YAReshapeV --> YAHandlePastKeyValue
+    YAHandlePastKeyValue --> YACheckPast
+    YACheckPast --> YAConcatWithPast & YAUseCurrent
+    YAConcatWithPast --> YAUpdatedKeyStates & YAUpdatedValueStates
+    YAUseCurrent --> YAUpdatedKeyStates & YAUpdatedValueStates
+    YAUpdatedKeyStates --> YAUpdateCache
+    YAUpdatedValueStates --> YAUpdateCache
+    YAUpdateCache --> YACreatePresent & YANoCache
+    YACreatePresent --> YAAttentionComputation
+    YANoCache --> YAAttentionComputation
+    YAAttentionComputation --> YACheckFlashAttention2
+    YACheckFlashAttention2 --> YAFlashAttention2Path & YACheckSDPA
+    YACheckSDPA --> YASDPAPath & YAStandardAttentionPath
+    YASDPAPath --> YADetermineCausal
+    YADetermineCausal --> YACheckPastForCausal
+    YACheckPastForCausal --> YASDPACausal & YASDPANonCausal
+    YASDPACausal --> YACallSDPA
+    YASDPANonCausal --> YACallSDPA
+    YACallSDPA --> YASDPAOutput
+    YAStandardAttentionPath --> YAComputeScores
+    YAComputeScores --> YAApplyAttentionMask
+    YAApplyAttentionMask --> YAAddMask & YAApplyCausalMask
+    YAApplyCausalMask --> YAApplyCausal & YAProceedToSoftmax
+    YAAddMask --> YAProceedToSoftmax
+    YAApplyCausal --> YAProceedToSoftmax
+    YAProceedToSoftmax --> YASoftmax
+    YASoftmax --> YAApplyDropout
+    YAApplyDropout --> YADropout & YAMatmulWithV
+    YADropout --> YAMatmulWithV
+    YAMatmulWithV --> YAStandardOutput
+    YAFlashAttention2Path --> YAFlashOutput
+    YASDPAOutput --> YAReshapeAttentionOutput
+    YAStandardOutput --> YAReshapeAttentionOutput
+    YAFlashOutput --> YAReshapeAttentionOutput
+    YAReshapeAttentionOutput --> YATransposeOutput
+    YATransposeOutput --> YAViewOutput
+    YAViewOutput --> YAOutputProjection
+    YAOutputProjection --> YAFinalOutput
+    YFFForward --> YFFInput
+    YFFInput --> YFFComputeGate & YFFComputeInput
+    YFFComputeGate --> YFFApplyActivation
+    YFFApplyActivation --> YFFElementWiseMultiply
+    YFFComputeInput --> YFFElementWiseMultiply
+    YFFElementWiseMultiply --> YFFComputeOutput
+    YFFComputeOutput --> YFFOutput
+    RNForward --> RNInput
+    RNInput --> RNStoreDtype
+    RNStoreDtype --> RNConvertToFloat32
+    RNConvertToFloat32 --> RNComputeVariance
+    RNComputeVariance --> RNComputeRMS
+    RNComputeRMS --> RNNormalize
+    RNNormalize --> RNApplyWeight
+    RNApplyWeight --> RNConvertToOriginalDtype
+    RNConvertToOriginalDtype --> RNOutput
+    ROPEInit --> ROPEComputeTheta
+    ROPEComputeTheta --> ROPECreatePositions
+    ROPECreatePositions --> ROPEComputeFreqs
+    ROPEComputeFreqs --> ROPEComputeEmb
+    ROPEComputeEmb --> ROPEComputeCos & ROPEComputeSin
+    ROPEComputeCos --> ROPERegisterBuffers
+    ROPEComputeSin --> ROPERegisterBuffers
+    ROPEApply --> ROPEInputs
+    ROPEInputs --> ROPECheckDims
+    ROPECheckDims --> ROPEUnsqueeze & ROPEUseAsIs
+    ROPEUnsqueeze --> ROPEApplyToQ
+    ROPEUseAsIs --> ROPEApplyToQ
+    ROPEApplyToQ --> ROPEApplyToK
+    ROPEApplyToK --> ROPEOutput
+    ROPERotateHalf --> ROPESplit
+    ROPESplit --> ROPERotate
+    ROPERotate --> ROPERotatedOutput
+    YsnrfdDecoderLayer["YsnrfdDecoderLayer"] --> YDLForward
+    YsnrfdAttention["YsnrfdAttention"] --> YAForward
+    YsnrfdFeedForward["YsnrfdFeedForward"] --> YFFForward
+    RMSNorm["RMSNorm"] --> RNForward
+    DecoderLayers --> YDLForward
+    EmbeddingLayer --> YMEmbeddingLookup
+    FinalNorm --> YMApplyFinalNorm
+    LMHead --> YFCLMApplyLMHead
+    ```
